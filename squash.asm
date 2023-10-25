@@ -97,7 +97,7 @@ segment code
     push    ax
     mov     ax,[p_pya]
     push    ax
-    call    draw_rectangle
+    call    desenha_retangulo
 
 ;escrever o cabecalho
     mov     cx,56			;numero de caracteres
@@ -128,35 +128,67 @@ escreve2:
 	inc  	dl	                ;avanca a coluna
     loop    escreve2
 
+nova_bola:
+    mov     byte[cor],preto ; apaga a bola anterior
+    mov     ax,[p_bx]
+    push    ax
+    mov     ax,[p_by]
+    push    ax
+    mov     ax,10
+    push    ax
+    call    full_circle
+    mov bx, [vx]
+    add [p_bx], bx
+    mov bx, [vy]
+    add [p_by], bx
+
+    mov     byte[cor],vermelho
+    mov     ax,[p_bx]
+    push    ax
+    mov     ax,[p_by]
+    push    ax
+    mov     ax,10
+    push    ax
+    call    full_circle
+
+novo_retangulo:
+    mov     byte[cor],preto
+    mov     ax,[p_px]
+    push    ax
+    mov     ax,[p_py]
+    push    ax
+    mov     ax,[p_pxl]
+    push    ax
+    mov     ax,[p_pya]
+    push    ax
+    call    desenha_retangulo
+
+    mov bx, [vy_ret]
+    add [p_py], bx
+    add [p_pya], bx
+
+    mov     byte[cor],branco
+    mov     ax,[p_px]
+    push    ax
+    mov     ax,[p_py]
+    push    ax
+    mov     ax,[p_pxl]
+    push    ax
+    mov     ax,[p_pya]
+    push    ax
+    call    desenha_retangulo
+
+
+
+
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
         mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)
+        
 del2:
         push cx ; Coloca cx na pilha para usa-lo em outro loop
         mov  cx, 05000h ; Teste modificando este valor
         
 del1:
-        ; mov     byte[cor],branco
-        ; mov     ax,[p_px]
-        ; push    ax
-        ; mov     ax,[p_py]
-        ; push    ax
-        ; mov     ax,[p_pxl]
-        ; push    ax
-        ; mov     ax,[p_pya]
-        ; push    ax
-        ; mov     ax,10
-        ; push    ax
-        ; call    draw_rectangle
-
-        mov     byte[cor],preto ; apaga a bola anterior
-        mov     ax,[p_bx]
-        push    ax
-        mov     ax,[p_by]
-        push    ax
-        mov     ax,10
-        push    ax
-        call    full_circle
-
         mov bx, 628
         cmp [p_bx], bx
         ;inc word [ptscontra]
@@ -176,27 +208,14 @@ del1:
         jz movecima
 
 continua:
-        mov bx, [vx]
-        add [p_bx], bx
-        mov bx, [vy]
-        add [p_by], bx
-
-        mov     byte[cor],vermelho
-        mov     ax,[p_bx]
-        push    ax
-        mov     ax,[p_by]
-        push    ax
-        mov     ax,10
-        push    ax
-        call    full_circle
+        call nova_bola
+        call novo_retangulo
         pop cx ; Recupera cx da pilha
         
         loop del1
         loop del2
         ret
 
-call escreve1
-call escreve2
 call delay
 call del1
 call del2
@@ -608,12 +627,12 @@ fim_line:
         ret     8
 
 ;-----------------------------------------------------------------------------
-; Função draw_rectangle
-; push x1; push y1; push x2; push y2; call draw_rectangle
+; Função desenha_retangulo
+; push x1; push y1; push x2; push y2; call desenha_retangulo
 ; O retângulo é definido pelos pontos (x1, y1) e (x2, y2)
 ; A cor é definida na variável 'cor'
 
-draw_rectangle:
+desenha_retangulo:
     push    bp
     mov     bp, sp
     pushf                 ; Coloca os flags na pilha
@@ -715,6 +734,7 @@ ptscontra       dw      0
 velocidade      dw      10
 vx              dw      1
 vy              dw      1
+vy_ret          dw      1
 p_bx            dw      320      ;posicao bola x
 p_by            dw      240      ;posicao bola y
 p_px            dw      600      ;posicao paddle x
