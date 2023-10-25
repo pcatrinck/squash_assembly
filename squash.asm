@@ -77,100 +77,122 @@ segment code
         push    ax
         call    line
         
-        
 ;desenha circulos 
         mov     byte[cor],vermelho
-        mov     ax,word[px]
+        mov     ax,word[p_bx]
         push    ax
-        mov     ax,word[py]
+        mov     ax,word[p_by]
         push    ax
         mov     ax,10
         push    ax
         call    full_circle
 
+;desenha o paddle
+    mov     byte[cor],branco
+    mov     ax,[p_px]
+    push    ax
+    mov     ax,[p_py]
+    push    ax
+    mov     ax,[p_pxl]
+    push    ax
+    mov     ax,[p_pya]
+    push    ax
+    call    draw_rectangle
+
 ;escrever o cabecalho
-    	mov     cx,56			;numero de caracteres
-    	mov     bx,0
-    	mov     dh,0			;linha 0-29
-    	mov     dl,0 			;coluna 0-79
-	mov	byte[cor],branco
+    mov     cx,56			;numero de caracteres
+    mov     bx,0
+    mov     dh,0			;linha 0-29
+    mov     dl,0 			;coluna 0-79
+	mov	    byte[cor],branco
 
 escreve1:
 	call    cursor
-    	mov     al,[bx+mens1]
+    mov     al,[bx+mens1]
 	call    caracter
-    	inc     bx	                ;proximo caracter
-	inc	dl	                ;avanca a coluna
-    	loop    escreve1
+    inc     bx	                ;proximo caracter
+	inc 	dl	                ;avanca a coluna
+    loop    escreve1
 
-        mov     cx,57			;numero de caracteres
-    	mov     bx,0
-    	mov     dh,1			;linha 0-29
-    	mov     dl,0 			;coluna 0-79
-	mov	byte[cor],branco
+    mov     cx,57			;numero de caracteres
+    mov     bx,0
+    mov     dh,1			;linha 0-29
+    mov     dl,0 			;coluna 0-79
+	mov	   byte[cor],branco
 
 escreve2:
 	call    cursor
-    	mov     al,[bx+mens2]
+    mov     al,[bx+mens2]
 	call    caracter
-    	inc     bx	                ;proximo caracter
-	inc	dl	                ;avanca a coluna
-    	loop    escreve2
+    inc     bx	                ;proximo caracter
+	inc  	dl	                ;avanca a coluna
+    loop    escreve2
 
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
         mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)
-
 del2:
         push cx ; Coloca cx na pilha para usa-lo em outro loop
-        mov cx, 0800h ; Teste modificando este valor
+        mov  cx, 05000h ; Teste modificando este valor
         
 del1:
-        mov     byte[cor],preto
-        mov     ax,[px]
+        ; mov     byte[cor],branco
+        ; mov     ax,[p_px]
+        ; push    ax
+        ; mov     ax,[p_py]
+        ; push    ax
+        ; mov     ax,[p_pxl]
+        ; push    ax
+        ; mov     ax,[p_pya]
+        ; push    ax
+        ; mov     ax,10
+        ; push    ax
+        ; call    draw_rectangle
+
+        mov     byte[cor],preto ; apaga a bola anterior
+        mov     ax,[p_bx]
         push    ax
-        mov     ax,[py]
+        mov     ax,[p_by]
         push    ax
         mov     ax,10
         push    ax
         call    full_circle
 
         mov bx, 628
-        cmp [px], bx
+        cmp [p_bx], bx
         ;inc word [ptscontra]
         jz moveesquerda
 
         mov bx, 10
-        cmp [px], bx
+        cmp [p_bx], bx
         ;inc word [ptspro]
         jz movedireita
 
         mov bx, 429
-        cmp [py], bx
+        cmp [p_by], bx
         jz movebaixo
 
         mov bx, 11
-        cmp [py], bx
+        cmp [p_by], bx
         jz movecima
-        
+
 continua:
         mov bx, [vx]
-        add [px], bx
+        add [p_bx], bx
         mov bx, [vy]
-        add [py], bx
+        add [p_by], bx
 
         mov     byte[cor],vermelho
-        mov     ax,[px]
+        mov     ax,[p_bx]
         push    ax
-        mov     ax,[py]
+        mov     ax,[p_by]
         push    ax
         mov     ax,10
         push    ax
         call    full_circle
-        pop     cx                      ; Recupera cx da pilha
+        pop cx ; Recupera cx da pilha
         
-        loop del1                       ; No loop del1, cx é decrementado até que volte a ser zero
-        
-        loop del2                       ; No loop del2, cx é decrementado até que seja zero
+        loop del1
+        loop del2
         ret
 
 call escreve1
@@ -196,7 +218,7 @@ movecima:
     mov [vy], bx
     jmp continua
 
-sai:
+encerra:
     mov ah,0 ; set video mode
     mov al,[modo_anterior] ; recupera o modo anterior
     int 10h
@@ -205,28 +227,24 @@ sai:
 
 
 ;delay
-
-
-
-
-    
 ;***************************************************************************
-;
-;   fun��o cursor
+
+
+;   funcao cursor
 ;
 ; dh = linha (0-29) e  dl=coluna  (0-79)
 cursor:
         pushf
-        push        ax
-        push        bx
-        push        cx
-        push        dx
-        push        si
-        push        di
-        push        bp
-        mov         ah,2
-        mov         bh,0
-        int         10h
+        push    ax
+        push    bx
+        push    cx
+        push    dx
+        push    si
+        push    di
+        push    bp
+        mov     ah,2
+        mov     bh,0
+        int     10h
         pop     bp
         pop     di
         pop     si
@@ -238,7 +256,7 @@ cursor:
         ret
 ;_____________________________________________________________________________
 ;
-;   fun��o caracter escrito na posi��o do cursor
+;   funcao caracter escrito na posicao do cursor
 ;
 ; al= caracter a ser escrito
 ; cor definida na variavel cor
@@ -251,11 +269,11 @@ caracter:
         push        si
         push        di
         push        bp
-            mov         ah,9
-            mov         bh,0
-            mov         cx,1
+        mov         ah,9
+        mov         bh,0
+        mov         cx,1
         mov         bl,[cor]
-            int         10h
+        int         10h
         pop     bp
         pop     di
         pop     si
@@ -267,7 +285,7 @@ caracter:
         ret
 ;_____________________________________________________________________________
 ;
-;   fun��o plot_xy
+;   funcao plot_xy
 ;
 ; push x; push y; call plot_xy;  (x<639, y<479)
 ; cor definida na variavel cor
@@ -330,17 +348,17 @@ full_circle:
         
     mov     di,cx
     sub     di,1     ;di=r-1
-    mov     dx,0    ;dx ser� a vari�vel x. cx � a variavel y
+    mov     dx,0    ;dx serah a variavel x. cx eh a variavel y
     
-;aqui em cima a l�gica foi invertida, 1-r => r-1
-;e as compara��es passaram a ser jl => jg, assim garante 
+;aqui em cima a logica foi invertida, 1-r => r-1
+;e as comparacoes passaram a ser jl => jg, assim garante 
 ;valores positivos para d
 
 stay_full:              ;loop
     mov     si,di
     cmp     si,0
     jg      inf_full       ;caso d for menor que 0, seleciona pixel superior (n�o  salta)
-    mov     si,dx       ;o jl � importante porque trata-se de conta com sinal
+    mov     si,dx       ;o jl eh importante porque trata-se de conta com sinal
     sal     si,1        ;multiplica por doi (shift arithmetic left)
     add     si,3
     add     di,si     ;nesse ponto d=d+2*dx+3
@@ -413,8 +431,8 @@ plotar_full:
     call    line
     
     cmp     cx,dx
-    jb      fim_full_circle  ;se cx (y) est� abaixo de dx (x), termina     
-    jmp     stay_full       ;se cx (y) est� acima de dx (x), continua no loop
+    jb      fim_full_circle  ;se cx (y) estah abaixo de dx (x), termina     
+    jmp     stay_full       ;se cx (y) estah acima de dx (x), continua no loop
     
     
 fim_full_circle:
@@ -433,15 +451,15 @@ fim_full_circle:
 ;
 ; push x1; push y1; push x2; push y2; call line;  (x<639, y<479)
 line:
-        push        bp
-        mov         bp,sp
-        pushf                        ;coloca os flags na pilha
-        push        ax
-        push        bx
-        push        cx
-        push        dx
-        push        si
-        push        di
+        push    bp
+        mov     bp,sp
+        pushf   ;coloca os flags na pilha
+        push    ax
+        push    bx
+        push    cx
+        push    dx
+        push    si
+        push    di
         mov     ax,[bp+10]   ; resgata os valores das coordenadas
         mov     bx,[bp+8]    ; resgata os valores das coordenadas
         mov     cx,[bp+6]    ; resgata os valores das coordenadas
@@ -449,17 +467,17 @@ line:
         cmp     ax,cx
         je      line2
         jb      line1
-        xchg        ax,cx
-        xchg        bx,dx
+        xchg    ax,cx
+        xchg    bx,dx
         jmp     line1
-line2:      ; deltax=0
-        cmp     bx,dx  ;subtrai dx de bx
+line2:  ; deltax=0
+        cmp     bx,dx        ;subtrai dx de bx
         jb      line3
-        xchg        bx,dx        ;troca os valores de bx e dx entre eles
+        xchg    bx,dx        ;troca os valores de bx e dx entre eles
 line3:  ; dx > bx
-        push        ax
-        push        bx
-        call        plot_xy
+        push    ax
+        push    bx
+        call    plot_xy
         cmp     bx,dx
         jne     line31
         jmp     fim_line
@@ -467,13 +485,13 @@ line31:     inc     bx
         jmp     line3
 ;deltax <>0
 line1:
-; comparar m�dulos de deltax e deltay sabendo que cx>ax
+; comparar modulos de deltax e deltay sabendo que cx>ax
     ; cx > ax
-        push        cx
+        push    cx
         sub     cx,ax
         mov     [deltax],cx
         pop     cx
-        push        dx
+        push    dx
         sub     dx,bx
         ja      line32
         neg     dx
@@ -481,30 +499,30 @@ line32:
         mov     [deltay],dx
         pop     dx
 
-        push        ax
+        push    ax
         mov     ax,[deltax]
         cmp     ax,[deltay]
         pop     ax
         jb      line5
 
     ; cx > ax e deltax>deltay
-        push        cx
+        push    cx
         sub     cx,ax
         mov     [deltax],cx
         pop     cx
-        push        dx
+        push    dx
         sub     dx,bx
         mov     [deltay],dx
         pop     dx
 
         mov     si,ax
 line4:
-        push        ax
-        push        dx
-        push        si
+        push    ax
+        push    dx
+        push    si
         sub     si,ax   ;(x-x1)
         mov     ax,[deltay]
-        imul        si
+        imul    si
         mov     si,[deltax]     ;arredondar
         shr     si,1
 ; se numerador (DX)>0 soma se <0 subtrai
@@ -516,12 +534,12 @@ line4:
 ar1:        sub     ax,si
         sbb     dx,0
 arc1:
-        idiv        word [deltax]
+        idiv    word [deltax]
         add     ax,bx
         pop     si
-        push        si
-        push        ax
-        call        plot_xy
+        push    si
+        push    ax
+        call    plot_xy
         pop     dx
         pop     ax
         cmp     si,cx
@@ -531,14 +549,14 @@ arc1:
 
 line5:      cmp     bx,dx
         jb      line7
-        xchg        ax,cx
-        xchg        bx,dx
+        xchg    ax,cx
+        xchg    bx,dx
 line7:
-        push        cx
+        push    cx
         sub     cx,ax
         mov     [deltax],cx
         pop     cx
-        push        dx
+        push    dx
         sub     dx,bx
         mov     [deltay],dx
         pop     dx
@@ -547,12 +565,12 @@ line7:
 
         mov     si,bx
 line6:
-        push        dx
-        push        si
-        push        ax
+        push    dx
+        push    si
+        push    ax
         sub     si,bx   ;(y-y1)
         mov     ax,[deltax]
-        imul        si
+        imul    si
         mov     si,[deltay]     ;arredondar
         shr     si,1
 ; se numerador (DX)>0 soma se <0 subtrai
@@ -564,14 +582,14 @@ line6:
 ar2:        sub     ax,si
         sbb     dx,0
 arc2:
-        idiv        word [deltay]
+        idiv    word [deltay]
         mov     di,ax
         pop     ax
         add     di,ax
         pop     si
-        push        di
-        push        si
-        call        plot_xy
+        push    di
+        push    si
+        call    plot_xy
         pop     dx
         cmp     si,dx
         je      fim_line
@@ -588,6 +606,63 @@ fim_line:
         popf
         pop     bp
         ret     8
+
+;-----------------------------------------------------------------------------
+; Função draw_rectangle
+; push x1; push y1; push x2; push y2; call draw_rectangle
+; O retângulo é definido pelos pontos (x1, y1) e (x2, y2)
+; A cor é definida na variável 'cor'
+
+draw_rectangle:
+    push    bp
+    mov     bp, sp
+    pushf                 ; Coloca os flags na pilha
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+    push    si
+    push    di
+
+    mov     ax, [bp + 10]  ; Resgata x1
+    mov     bx, [bp + 8] ; Resgata y1
+    mov     cx, [bp + 6] ; Resgata x2
+    mov     dx, [bp + 4] ; Resgata y2
+
+    ; Desenha as linhas do retângulo
+    push    ax ; Coloca x1 na pilha
+    push    bx ; Coloca y1 na pilha
+    push    cx ; Coloca x2 na pilha
+    push    bx ; Mantém y1 na pilha (reta horizontal superior)
+    call    line
+
+    push    ax ; Coloca x1 na pilha
+    push    dx ; Coloca y2 na pilha
+    push    cx ; Coloca x2 na pilha
+    push    dx ; Mantém y2 na pilha (reta horizontal inferior)
+    call    line
+
+    push    ax ; Coloca x1 na pilha
+    push    bx ; Coloca y1 na pilha
+    push    ax ; Mantém x1 na pilha (reta vertical à esquerda)
+    push    dx ; Coloca y2 na pilha
+    call    line
+
+    push    cx ; Coloca x2 na pilha
+    push    bx ; Coloca y1 na pilha
+    push    cx ; Mantém x2 na pilha (reta vertical à direita)
+    push    dx ; Coloca y2 na pilha
+    call    line
+
+    pop     di
+    pop     si
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
+    popf
+    pop     bp
+    ret     8
 ;*******************************************************************
 segment data
 
@@ -640,8 +715,24 @@ ptscontra       dw      0
 velocidade      dw      10
 vx              dw      1
 vy              dw      1
-px              dw      320
-py              dw      240
+p_bx            dw      320      ;posicao bola x
+p_by            dw      240      ;posicao bola y
+p_px            dw      600      ;posicao paddle x
+p_py            dw      255      ;posicao paddle y
+; p_l             dw      20
+; p_a             dw      50
+p_pxl           dw      620      ;posicao paddle x + largura (20)
+p_pya           dw      215      ;posicao paddle y - altura  (50)
+
+; ; Somar p_px com p_l e armazenar em p_pxl
+; mov ax, [p_px]    ; Carrega o valor de p_px em ax
+; add ax, [p_l]     ; Soma o valor de p_l a ax
+; mov [p_pxl], ax   ; Armazena o resultado em p_pxl
+
+; ; Somar p_py com p_a e armazenar em p_pya
+; mov ax, [p_py]    ; Carrega o valor de p_py em ax
+; add ax, [p_a]     ; Soma o valor de p_a a ax
+; mov [p_pya], ax   ; Armazena o resultado em p_pya
 ;*************************************************************************
 segment stack stack
             resb        512
