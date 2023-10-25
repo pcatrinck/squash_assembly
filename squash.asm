@@ -179,8 +179,6 @@ novo_retangulo:
     call    desenha_retangulo
 
 
-
-
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
         mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)
         
@@ -202,11 +200,27 @@ del1:
         mov bx, 429
         cmp [p_by], bx
         jz movebaixo
+        cmp [p_py], bx
+        jz descendo
 
         mov bx, 11
         cmp [p_by], bx
         jz movecima
+        cmp [p_pya], bx
+        jz subindo
 
+
+        mov ah, 0bh    ;BIOS.TestKey
+        int 21h
+        cmp al, 0
+        jne keyboard
+        jmp continua
+
+para:
+    mov bx,0
+    mov [vy_ret], bx
+    jmp continua
+    
 continua:
         call nova_bola
         call novo_retangulo
@@ -215,6 +229,17 @@ continua:
         loop del1
         loop del2
         ret
+
+devagar:
+        mov bx, -1
+        add[vx], bx
+        add[vy], bx
+        jmp continua
+rapido:
+        mov bx, 1
+        add[vx], bx
+        add[vy], bx
+        jmp continua
 
 call delay
 call del1
@@ -236,6 +261,29 @@ movecima:
     mov bx, 1
     mov [vy], bx
     jmp continua
+
+descendo:
+    mov bx,-1
+    mov [vy_ret], bx
+    jmp continua
+subindo:
+    mov bx,1
+    mov [vy_ret], bx
+    jmp continua
+
+keyboard:
+    mov ah, 08H ;Ler caracter da STDIN
+    int 21H
+    cmp al, 'c'
+    jz subindo
+    cmp al, 'b'
+    jz descendo
+    cmp al, 'p'
+    jz rapido
+    cmp al, 'm'
+    jz devagar
+    cmp al, 's'
+    jz encerra
 
 encerra:
     mov ah,0 ; set video mode
@@ -734,14 +782,12 @@ ptscontra       dw      0
 velocidade      dw      10
 vx              dw      1
 vy              dw      1
-vy_ret          dw      1
+vy_ret          dw      0        ;velocidade em y do retangulo
 p_bx            dw      320      ;posicao bola x
 p_by            dw      240      ;posicao bola y
 p_px            dw      600      ;posicao paddle x
 p_py            dw      255      ;posicao paddle y
-; p_l             dw      20
-; p_a             dw      50
-p_pxl           dw      620      ;posicao paddle x + largura (20)
+p_pxl           dw      610      ;posicao paddle x + largura (10)
 p_pya           dw      215      ;posicao paddle y - altura  (50)
 
 ; ; Somar p_px com p_l e armazenar em p_pxl
