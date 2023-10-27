@@ -1,6 +1,7 @@
 ; autor: Patrick Dias Catrinck
 ; Trabalho de programação da disciplina de Sistemas Embarcados
-;
+; Função circle e full_circle disponibilizados por Jefferson Moro em 10/2009
+
 segment code
 ..start:
         mov         ax,data
@@ -88,147 +89,213 @@ segment code
         call    full_circle
 
 ;desenha o paddle
-    mov     byte[cor],branco
-    mov     ax,[p_px]
-    push    ax
-    mov     ax,[p_py]
-    push    ax
-    mov     ax,[p_pxl]
-    push    ax
-    mov     ax,[p_pya]
-    push    ax
-    call    desenha_retangulo
+        mov     byte[cor],branco
+        mov     ax,[p_px]
+        push    ax
+        mov     ax,[p_py]
+        push    ax
+        mov     ax,[p_pxl]
+        push    ax
+        mov     ax,[p_pya]
+        push    ax
+        call    desenha_retangulo
 
 ;escrever o cabecalho
-    mov     cx,56			;numero de caracteres
-    mov     bx,0
-    mov     dh,0			;linha 0-29
-    mov     dl,0 			;coluna 0-79
-	mov	    byte[cor],branco
+        mov     cx,56			;numero de caracteres
+        mov     bx,0
+        mov     dh,0			;linha 0-29
+        mov     dl,0 			;coluna 0-79
+        mov	byte[cor],branco
 
 escreve1:
-	call    cursor
-    mov     al,[bx+mens1]
-	call    caracter
-    inc     bx	                ;proximo caracter
-	inc 	dl	                ;avanca a coluna
-    loop    escreve1
+        call    cursor
+        mov     al,[bx+mens1]
+        call    caracter
+        inc     bx	                ;proximo caracter
+        inc     dl	                ;avanca a coluna
+        loop    escreve1
 
-    mov     cx,57			;numero de caracteres
-    mov     bx,0
-    mov     dh,1			;linha 0-29
-    mov     dl,0 			;coluna 0-79
-	mov	   byte[cor],branco
+        mov     cx,78			;numero de caracteres
+        mov     bx,0
+        mov     dh,1			;linha 0-29
+        mov     dl,0 			;coluna 0-79
+        mov	byte[cor],branco
 
 escreve2:
-	call    cursor
-    mov     al,[bx+mens2]
-	call    caracter
-    inc     bx	                ;proximo caracter
-	inc  	dl	                ;avanca a coluna
-    loop    escreve2
+        call    cursor
+        mov     al,[bx+mens2]
+        call    caracter
+        inc     bx	                ;proximo caracter
+        inc     dl	                ;avanca a coluna
+        loop    escreve2
 
 nova_bola:
-    mov     byte[cor],preto ; apaga a bola anterior
-    mov     ax,[p_bx]
-    push    ax
-    mov     ax,[p_by]
-    push    ax
-    mov     ax,10
-    push    ax
-    call    full_circle
-    mov bx, [vx]
-    add [p_bx], bx
-    mov bx, [vy]
-    add [p_by], bx
+        mov     byte[cor],preto ; apaga a bola anterior
+        mov     ax,[p_bx]
+        push    ax
+        mov     ax,[p_by]
+        push    ax
+        mov     ax,10
+        push    ax
+        call    full_circle
+        mov     bx, [vx]
+        add     [p_bx], bx
+        mov     bx, [vy]
+        add     [p_by], bx
 
-    mov     byte[cor],vermelho
-    mov     ax,[p_bx]
-    push    ax
-    mov     ax,[p_by]
-    push    ax
-    mov     ax,10
-    push    ax
-    call    full_circle
+        mov     byte[cor],vermelho
+        mov     ax,[p_bx]
+        push    ax
+        mov     ax,[p_by]
+        push    ax
+        mov     ax,10
+        push    ax
+        call    full_circle
 
 novo_retangulo:
-    mov     byte[cor],preto
-    mov     ax,[p_px]
-    push    ax
-    mov     ax,[p_py]
-    push    ax
-    mov     ax,[p_pxl]
-    push    ax
-    mov     ax,[p_pya]
-    push    ax
-    call    desenha_retangulo
+        mov     byte[cor],preto
+        mov     ax,[p_px]
+        push    ax
+        mov     ax,[p_py]
+        push    ax
+        mov     ax,[p_pxl]
+        push    ax
+        mov     ax,[p_pya]
+        push    ax
+        call    desenha_retangulo
 
-    mov bx, [vy_ret]
-    add [p_py], bx
-    add [p_pya], bx
+        mov bx, [vy_ret]
+        add [p_py], bx
+        add [p_pya], bx
 
-    mov     byte[cor],branco
-    mov     ax,[p_px]
-    push    ax
-    mov     ax,[p_py]
-    push    ax
-    mov     ax,[p_pxl]
-    push    ax
-    mov     ax,[p_pya]
-    push    ax
-    call    desenha_retangulo
-
+        mov     byte[cor],branco
+        mov     ax,[p_px]
+        push    ax
+        mov     ax,[p_py]
+        push    ax
+        mov     ax,[p_pxl]
+        push    ax
+        mov     ax,[p_pya]
+        push    ax
+        call    desenha_retangulo
 
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
-        mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)
-        
+        mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)        
 del2:
         push cx ; Coloca cx na pilha para usa-lo em outro loop
-        mov  cx, 05000h ; Teste modificando este valor
-        
+        mov  cx, 050h
 del1:
-        mov bx, 628
-        cmp [p_bx], bx
-        ;inc word [ptscontra]
-        jz moveesquerda
+        mov si, 628
+        cmp [p_bx], si
+        jz reflete_direita
 
-        mov bx, 10
-        cmp [p_bx], bx
-        ;inc word [ptspro]
-        jz movedireita
+        mov si, 10
+        cmp [p_bx], si
+        jz reflete_esquerda
 
-        mov bx, 429
-        cmp [p_by], bx
-        jz movebaixo
-        cmp [p_py], bx
+        mov si, 429
+        cmp [p_by], si
+        jz call_reflete_cima
+        cmp [p_py], si
         jz descendo
 
-        mov bx, 11
-        cmp [p_by], bx
-        jz movecima
-        cmp [p_pya], bx
+        mov si, 11
+        cmp [p_by], si
+        jz call_reflete_baixo
+        cmp [p_pya], si
         jz subindo
 
+        mov si, [p_px]
+        add si, -10 ; raio
+        cmp [p_bx], si
+        je checa_topo
 
         mov ah, 0bh    ;BIOS.TestKey
         int 21h
         cmp al, 0
-        jne keyboard
+        jne call_jne_keyboard
         jmp continua
-
-para:
-    mov bx,0
-    mov [vy_ret], bx
-    jmp continua
-    
 continua:
         call nova_bola
         call novo_retangulo
-        pop cx ; Recupera cx da pilha
-        
+        pop cx
         loop del1
         loop del2
         ret
+call delay
+call del1
+call del2
+
+call_reflete_cima:
+        jmp reflete_cima
+call_reflete_baixo:
+        jmp reflete_baixo
+call_marca_ponto_jogador:
+        jmp marca_ponto_jogador
+call_jne_keyboard:
+        jmp keyboard
+call_continua:
+        jmp continua
+
+reflete_direita:
+        mov bx, -1
+        mov [vx], bx
+        mov bx, 628
+        cmp [p_bx], bx
+        jz  call_marca_ponto_computador
+        jmp continua
+reflete_esquerda:
+        mov bx, 1
+        mov [vx], bx
+        mov bx, 10
+        cmp [p_bx], bx
+        jz  call_marca_ponto_jogador
+        jmp continua
+descendo:
+        mov bx,-1
+        mov [vy_ret], bx
+        jmp continua
+subindo:
+        mov bx,1
+        mov [vy_ret], bx
+        jmp continua
+reflete_cima:
+        mov bx, -1
+        mov [vy], bx
+        jmp call_continua
+reflete_baixo:
+        mov bx, 1
+        mov [vy], bx
+        jmp call_continua
+checa_topo:
+        mov bx, [p_py]
+        add bx, 2 ; margem
+        cmp [p_by], bx
+        jle checa_base
+        jmp call_continua
+checa_base:
+        mov bx, [p_pya]
+        add bx, -2
+        cmp [p_by], bx
+        jnge call_continua
+        call reflete_direita
+
+keyboard:
+        mov ah, 08H ;Ler caracter da STDIN
+        int 21H
+        cmp al, 'c'
+        jz subindo
+        cmp al, 'b'
+        jz descendo
+        cmp al, 'p'
+        jz rapido
+        cmp al, 'm'
+        jz devagar
+        cmp al, 's'
+        jz encerra
+
+call_marca_ponto_computador:
+    jmp marca_ponto_computador
 
 devagar:
         mov bx, -1
@@ -241,61 +308,61 @@ rapido:
         add[vy], bx
         jmp continua
 
-call delay
-call del1
-call del2
-
-moveesquerda:
-    mov bx, -1
-    mov [vx], bx
-    jmp continua
-movedireita:
-    mov bx, 1
-    mov [vx], bx
-    jmp continua
-movebaixo:
-    mov bx, -1
-    mov [vy], bx
-    jmp continua
-movecima:
-    mov bx, 1
-    mov [vy], bx
-    jmp continua
-
-descendo:
-    mov bx,-1
-    mov [vy_ret], bx
-    jmp continua
-subindo:
-    mov bx,1
-    mov [vy_ret], bx
-    jmp continua
-
-keyboard:
-    mov ah, 08H ;Ler caracter da STDIN
-    int 21H
-    cmp al, 'c'
-    jz subindo
-    cmp al, 'b'
-    jz descendo
-    cmp al, 'p'
-    jz rapido
-    cmp al, 'm'
-    jz devagar
-    cmp al, 's'
-    jz encerra
-
 encerra:
-    mov ah,0 ; set video mode
-    mov al,[modo_anterior] ; recupera o modo anterior
-    int 10h
-    mov ax,4c00h
-    int 21h
+        mov ah,0 ; set video mode
+        mov al,[modo_anterior] ; recupera o modo anterior
+        int 10h
+        mov ax,4c00h
+        int 21h
 
+marca_ponto_computador:
+        mov     ax, [ponto_computador]
+        add     ax, 1
+        mov     [ponto_computador], ax
+        mov     ax, [ponto_computador]  
+        call    converte_para_ascii     
+        mov     bx, string_ponto_computador       
+        mov     cx, 2                   
+        mov     dh, 1                 
+        mov     dl, 25                  
+        mov     byte [cor], vermelho    
+        call    escreve_valor_loop
+        jmp     continua
 
-;delay
-;***************************************************************************
+marca_ponto_jogador:
+        mov ax, [ponto_jogador]
+        add ax, 1
+        mov [ponto_jogador], ax
+        mov     ax, [ponto_jogador]  
+        call    converte_para_ascii  
+        mov     bx, string_ponto_computador       
+        mov     cx, 2       
+        mov     dh, 1        
+        mov     dl, 18          
+        mov     byte [cor], azul  
+        call    escreve_valor_loop
+        jmp     continua
 
+escreve_valor_loop:
+        call    cursor
+        mov     al, [bx]             
+        call    caracter
+        inc     bx                    
+        inc     dl  
+        loop    escreve_valor_loop
+        ret
+
+converte_para_ascii:
+        push    ax                               ; empilha ax
+        xor     dx, dx                           ; limpa dx antes de dividir
+        mov     cx, 10                           ; numerador recebe 10
+        div     cx                               ; divide ax por 10
+        add     dl, '0'                          ; soma o valor do caracter 0 em ascii, para converter as dezenas
+        mov     [string_ponto_computador+1], dl  ; guarda as unidades na casa do lado
+        add     al, '0'                          ; converte pra ascii
+        mov     [string_ponto_computador], al    ; termina de armazenar o resultado
+        pop     ax                               ; restaura o valor de ax
+        ret
 
 ;   funcao cursor
 ;
@@ -755,40 +822,31 @@ cor     db      branco_intenso
 
 preto           equ     0
 azul            equ     1
-verde           equ     2
-cyan            equ     3
 vermelho        equ     4
-magenta         equ     5
-marrom          equ     6
 branco          equ     7
-cinza           equ     8
-azul_claro      equ     9
-verde_claro     equ     10
-cyan_claro      equ     11
-rosa            equ     12
-magenta_claro   equ     13
-amarelo         equ     14
 branco_intenso  equ     15
 
-modo_anterior   db      0
-linha           dw      0
-coluna          dw      0
-deltax          dw      0
-deltay          dw      0   
-mens1           db      'Exercicio de Programacao de Sistemas Embarcados 1 2023/2'
-mens2           db      'Patrick Catrinck 00 x 00 Computador     Velocidade (1/3)'
-ptspro          dw      0
-ptscontra       dw      0
-velocidade      dw      10
-vx              dw      1
-vy              dw      1
-vy_ret          dw      0        ;velocidade em y do retangulo
-p_bx            dw      320      ;posicao bola x
-p_by            dw      240      ;posicao bola y
-p_px            dw      600      ;posicao paddle x
-p_py            dw      255      ;posicao paddle y
-p_pxl           dw      610      ;posicao paddle x + largura (10)
-p_pya           dw      215      ;posicao paddle y - altura  (50)
+modo_anterior    db      0
+linha            dw      0
+coluna           dw      0
+deltax           dw      0
+deltay           dw      0   
+mens1            db      'Exercicio de Programacao de Sistemas Embarcados 1 2023/2'
+mens2            db      'Patrick Catrinck  00  x  00  Computador                       Velocidade (1/3)'
+velocidade       dw      20
+vx               dw      1
+vy               dw      1
+vy_ret           dw      0        ;velocidade em y do retangulo
+p_bx             dw      320      ;posicao bola x
+p_by             dw      240      ;posicao bola y
+p_px             dw      600      ;posicao paddle x
+p_py             dw      255      ;posicao paddle y
+p_pxl            dw      610      ;posicao paddle x + largura (10)
+p_pya            dw      215      ;posicao paddle y - altura  (50)
+ponto_jogador    dw      0
+ponto_computador dw      0
+string_ponto_computador        db      "00"     ; Reserve space for the result
+string_ponto_jogador           db      "00"     ; Reserve space for the result
 
 ; ; Somar p_px com p_l e armazenar em p_pxl
 ; mov ax, [p_px]    ; Carrega o valor de p_px em ax
