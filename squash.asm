@@ -1,6 +1,5 @@
-; autor: Patrick Dias Catrinck
+; autor: Patrick Dias Catrinck 
 ; Trabalho de programação da disciplina de Sistemas Embarcados
-; Função circle e full_circle disponibilizados por Jefferson Moro em 10/2009
 
 segment code
 ..start:
@@ -179,12 +178,12 @@ novo_retangulo:
         push    ax
         call    desenha_retangulo
 
-delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
-        mov cx, word [velocidade] ; Carrega “velocidade” em cx (contador para loop)        
-del2:
-        push cx ; Coloca cx na pilha para usa-lo em outro loop
-        mov  cx, 050h
 del1:
+        mov si, [p_px]
+        add si, -10 ; raio
+        cmp [p_bx], si
+        je call_checa_topo
+
         mov si, 628
         cmp [p_bx], si
         jz reflete_direita
@@ -196,19 +195,18 @@ del1:
         mov si, 429
         cmp [p_by], si
         jz call_reflete_cima
-        cmp [p_py], si
-        jz descendo
 
         mov si, 11
         cmp [p_by], si
         jz call_reflete_baixo
+        
+        mov si, 2
         cmp [p_pya], si
-        jz subindo
+        jle subindo
 
-        mov si, [p_px]
-        add si, -10 ; raio
-        cmp [p_bx], si
-        je checa_topo
+        mov si, 439
+        cmp [p_py], si
+        jge descendo
 
         mov ah, 0bh    ;BIOS.TestKey
         int 21h
@@ -216,16 +214,22 @@ del1:
         jne call_jne_keyboard
         jmp continua
 continua:
+        call espera
         call nova_bola
         call novo_retangulo
         pop cx
         loop del1
-        loop del2
         ret
-call delay
-call del1
-call del2
 
+espera:
+        xor ax,ax
+        mov ah, 86h
+        mov dx, [delay] ; ficou melhor botar em dx, cx travava MUITO
+        int 15h
+        ret
+
+call_checa_topo:
+        jmp checa_topo
 call_reflete_cima:
         jmp reflete_cima
 call_reflete_baixo:
@@ -234,52 +238,54 @@ call_marca_ponto_jogador:
         jmp marca_ponto_jogador
 call_jne_keyboard:
         jmp keyboard
-call_continua:
-        jmp continua
 
 reflete_direita:
-        mov bx, -1
-        mov [vx], bx
-        mov bx, 628
-        cmp [p_bx], bx
+        mov si, -1
+        mov [vx], si
+        mov si, 628
+        cmp [p_bx], si
         jz  call_marca_ponto_computador
         jmp continua
 reflete_esquerda:
-        mov bx, 1
-        mov [vx], bx
-        mov bx, 10
-        cmp [p_bx], bx
-        jz  call_marca_ponto_jogador
+        mov si, 1
+        mov [vx], si
+        ; mov si, 10
+        ; cmp [p_bx], si
+        ; jz  call_marca_ponto_jogador
         jmp continua
 descendo:
-        mov bx,-1
-        mov [vy_ret], bx
+        mov si,-1
+        mov [vy_ret], si
         jmp continua
 subindo:
-        mov bx,1
-        mov [vy_ret], bx
+        mov si,1
+        mov [vy_ret], si
         jmp continua
 reflete_cima:
-        mov bx, -1
-        mov [vy], bx
+        mov si, -1
+        mov [vy], si
         jmp call_continua
 reflete_baixo:
-        mov bx, 1
-        mov [vy], bx
+        mov si, 1
+        mov [vy], si
         jmp call_continua
 checa_topo:
-        mov bx, [p_py]
-        add bx, 2 ; margem
-        cmp [p_by], bx
+        mov si, [p_py]
+        add si, 3  ; margem
+        cmp [p_by], si
         jle checa_base
         jmp call_continua
 checa_base:
-        mov bx, [p_pya]
-        add bx, -2
-        cmp [p_by], bx
+        mov si, [p_pya]
+        add si, -3 ; margem
+        cmp [p_by], si
         jnge call_continua
-        call reflete_direita
-
+        mov si, -1
+        cmp [vx],si
+        je call_continua
+        call call_marca_ponto_jogador
+call_continua:
+        jmp continua
 keyboard:
         mov ah, 08H ;Ler caracter da STDIN
         int 21H
@@ -288,25 +294,30 @@ keyboard:
         cmp al, 'b'
         jz descendo
         cmp al, 'p'
-        jz rapido
+        jz acelera
         cmp al, 'm'
-        jz devagar
+        jz desacelera
         cmp al, 's'
         jz encerra
+        jmp continua
 
 call_marca_ponto_computador:
     jmp marca_ponto_computador
 
-devagar:
-        mov bx, -1
-        add[vx], bx
-        add[vy], bx
-        jmp continua
-rapido:
-        mov bx, 1
-        add[vx], bx
-        add[vy], bx
-        jmp continua
+desacelera:
+        mov si,20000
+        cmp [delay], si
+        je marca_velocidade
+        mov si, 10000
+        add[delay], si
+        jmp marca_velocidade
+acelera:
+        mov si,0
+        cmp [delay], si
+        je marca_velocidade
+        mov si, -10000
+        add[delay], si
+        jmp marca_velocidade
 
 encerra:
         mov ah,0 ; set video mode
@@ -314,6 +325,38 @@ encerra:
         int 10h
         mov ax,4c00h
         int 21h
+
+; velocidade_1:
+;         mov ax,1
+;         ret
+; velocidade_2:
+;         mov ax,2
+;         ret
+; velocidade_3:
+;         mov ax,3
+;         ret
+
+marca_velocidade:
+        mov     ax, [delay]   ; Load 'delay' into AX
+        mov     cx, 10000     ; Set the divisor to 10,000
+        xor     dx, dx        ; Clear DX to ensure the division result doesn't affect it
+        div     cx            ; Divide AX by CX, result in AX (quotient), DX (remainder)
+        add     ax,1
+        ; mov ax, [delay]
+        ; cmp ax,0
+        ; je velocidade_3
+        ; cmp ax,10000
+        ; je velocidade_2
+        ; cmp ax,20000
+        ; je velocidade_1
+        call    converte_para_ascii     
+        mov     bx, string_ponto_computador       
+        mov     cx, 2                   
+        mov     dh, 1                 
+        mov     dl, 72
+        mov     byte [cor], branco_intenso    
+        call    escreve_valor_loop
+        jmp     continua
 
 marca_ponto_computador:
         mov     ax, [ponto_computador]
@@ -330,9 +373,9 @@ marca_ponto_computador:
         jmp     continua
 
 marca_ponto_jogador:
-        mov ax, [ponto_jogador]
-        add ax, 1
-        mov [ponto_jogador], ax
+        mov     ax, [ponto_jogador]
+        add     ax, 1
+        mov     [ponto_jogador], ax
         mov     ax, [ponto_jogador]  
         call    converte_para_ascii  
         mov     bx, string_ponto_computador       
@@ -341,7 +384,7 @@ marca_ponto_jogador:
         mov     dl, 18          
         mov     byte [cor], azul  
         call    escreve_valor_loop
-        jmp     continua
+        call    reflete_direita
 
 escreve_valor_loop:
         call    cursor
@@ -822,6 +865,7 @@ cor     db      branco_intenso
 
 preto           equ     0
 azul            equ     1
+verde           equ     2
 vermelho        equ     4
 branco          equ     7
 branco_intenso  equ     15
@@ -832,8 +876,8 @@ coluna           dw      0
 deltax           dw      0
 deltay           dw      0   
 mens1            db      'Exercicio de Programacao de Sistemas Embarcados 1 2023/2'
-mens2            db      'Patrick Catrinck  00  x  00  Computador                       Velocidade (1/3)'
-velocidade       dw      20
+mens2            db      'Patrick Catrinck  00  x  00  Computador                          Delay (03/03)'
+delay            dw      20000
 vx               dw      1
 vy               dw      1
 vy_ret           dw      0        ;velocidade em y do retangulo
@@ -845,18 +889,10 @@ p_pxl            dw      610      ;posicao paddle x + largura (10)
 p_pya            dw      215      ;posicao paddle y - altura  (50)
 ponto_jogador    dw      0
 ponto_computador dw      0
-string_ponto_computador        db      "00"     ; Reserve space for the result
-string_ponto_jogador           db      "00"     ; Reserve space for the result
+string_ponto_computador        db      "00"  
+string_ponto_jogador           db      "00"  
+string_tempo                   db      "0"  
 
-; ; Somar p_px com p_l e armazenar em p_pxl
-; mov ax, [p_px]    ; Carrega o valor de p_px em ax
-; add ax, [p_l]     ; Soma o valor de p_l a ax
-; mov [p_pxl], ax   ; Armazena o resultado em p_pxl
-
-; ; Somar p_py com p_a e armazenar em p_pya
-; mov ax, [p_py]    ; Carrega o valor de p_py em ax
-; add ax, [p_a]     ; Soma o valor de p_a a ax
-; mov [p_pya], ax   ; Armazena o resultado em p_pya
 ;*************************************************************************
 segment stack stack
             resb        512
